@@ -18,6 +18,11 @@ import (
 	"time"
 )
 
+const folderName string = ".narukeFolder"
+
+// TODO: Create function that will create the folder and settings.json file and \
+// ...verify if the folder and file exists
+
 func main(){
 	if !(len(os.Args) > 1){
 		fmt.Println("Usage: ./naruken <command> [options...]")
@@ -73,12 +78,12 @@ func cmdInit(){
 
 	// Creating one time registration.
 	// When user will run this command, this piece of code will check if settings.json exists and if not then that will be created
-	if _, err := os.Stat("./.naruken/settings.json"); os.IsNotExist(err) {
-		err := os.Mkdir(".naruken", 0644)
+	if _, err := os.Stat(folderName + "/settings.json"); os.IsNotExist(err) {
+		err := os.Mkdir(folderName, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
-		file, err := os.Create(".naruken/settings.json")
+		file, err := os.Create(folderName + "/settings.json")
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -127,7 +132,7 @@ func (p *CTFMemberData) Register(){
 		}
 		// Joining together user ID with another information that I already have
 		p.UID = memberUID.UID
-		file, err := os.OpenFile(".naruken/settings.json", os.O_CREATE|os.O_WRONLY, 0644)
+		file, err := os.OpenFile(folderName + "/settings.json", os.O_CREATE|os.O_WRONLY, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -149,12 +154,12 @@ func cmdSubmit(){
 	}
 	// Checking if the user is executed the init command
 	var memberData CTFMemberData
-	if _, err := os.Stat(".naruken/settings.json"); os.IsNotExist(err) {
+	if _, err := os.Stat(folderName + "/settings.json"); os.IsNotExist(err) {
 		fmt.Println("To submit the flag, please run the init command at first.")
 		return
 	} else {
 		// reading the data from settings.json
-		file, err := os.OpenFile(".naruken/settings.json", os.O_RDONLY, 0644)
+		file, err := os.OpenFile(folderName + "/settings.json", os.O_RDONLY, 0666)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -205,7 +210,7 @@ func cmdSubmit(){
 
 // The admin management interface
 func cmdScore(){
-	if _, err := os.Stat("./.naruken/settings.json"); os.IsNotExist(err) {
+	if _, err := os.Stat(folderName + "/settings.json"); os.IsNotExist(err) {
 		fmt.Println("You need to register for the CTF to use this command.")
 		return
 	}
@@ -246,14 +251,14 @@ func cmdScore(){
 
 // Deleting the files that the tool created
 func cmdEnd(){
-	if _, err := os.Stat(".naruken"); !os.IsNotExist(err) {
+	if _, err := os.Stat(folderName); !os.IsNotExist(err) {
 		// Deleting the config file
-		err = os.Remove(".naruken/settings.json")
+		err = os.Remove(folderName + "/settings.json")
 		if err != nil {
 			log.Fatal(err)
 		}
 		// Deleting the directory
-		err = os.Remove(".naruken")
+		err = os.Remove(folderName)
 		if err != nil {
 			log.Fatal(err)
 		}
