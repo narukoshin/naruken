@@ -79,7 +79,7 @@ func cmdInit(){
 	// Creating one time registration.
 	// When user will run this command, this piece of code will check if settings.json exists and if not then that will be created
 	if _, err := os.Stat(folderName + "/settings.json"); os.IsNotExist(err) {
-		err := os.Mkdir(folderName, 0666)
+		err := os.Mkdir(folderName, 0777)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -132,7 +132,7 @@ func (p *CTFMemberData) Register(){
 		}
 		// Joining together user ID with another information that I already have
 		p.UID = memberUID.UID
-		file, err := os.OpenFile(folderName + "/settings.json", os.O_CREATE|os.O_WRONLY, 0666)
+		file, err := os.OpenFile(folderName + "/settings.json", os.O_CREATE|os.O_WRONLY, 0777)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -159,7 +159,7 @@ func cmdSubmit(){
 		return
 	} else {
 		// reading the data from settings.json
-		file, err := os.OpenFile(folderName + "/settings.json", os.O_RDONLY, 0666)
+		file, err := os.OpenFile(folderName + "/settings.json", os.O_RDONLY, 0777)
 		if err != nil {
 			log.Fatal(err)
 		}
