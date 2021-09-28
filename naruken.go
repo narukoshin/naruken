@@ -18,13 +18,33 @@ import (
 	"time"
 )
 
+// The folder name that will be created in the same directory where is the file located in.
+// In this folder will be stored the user ID that will be used to identify the user.
 const folderName string = ".narukeFolder"
 
 // TODO: Create function that will create the folder and settings.json file and \
 // ...verify if the folder and file exists
 
+// Another thing to do is, how to get the fucking admin privileges.
+// for example, if I am creating a new CTF, the database will be recreated and the info will be lost.
+// So, I need somehow verify that I am really the admin
+// first ideas is to make something like backup codes and server-side verify
+// something like - admins.json file where will be - ["{UID}", "{UID2}"]
+// and, to get the admin privileges you need to run the specific command and enter the secret key that only the right admin know.
+
+// The user with admin privileges will be kinda powerful because there will be function to reset the whole CTF
+// like, the function will send the singal to the server to delete the database and creates new CTF
+
 func verifyRegistration() bool {
+	// TODO: The user can create many profiles so, we need to create something for the integrity like...... capturing the hash of the file
+	// ...but there is the problem because in the settings.json is stored the user id
+	// so... how can we verify if the user made changes in the file or created another account without the permission?
 	var file *os.File
+
+	// we have new problem
+	// Sometimes I need to check if the folder and file exists but I don't need to create them
+	// But this function is creating them if they are not exists
+
 	if _, err := os.Stat(folderName); os.IsNotExist(err) {
 		// Creatng the folder where our settings.json file will be stored
 		err = os.Mkdir(folderName, 0777)
@@ -45,6 +65,12 @@ func verifyRegistration() bool {
 			log.Fatal(err)
 		}
 		defer file.Close()
+		// Verifying the user aka checking if he is already registered in the database
+		// well... verification maybe will be later
+		// At this moment, the verify function is only checking for the folder and the file. If the folder with file exists
+		// ...then the verification is successfuly, but we need also verify the information with the database if the user exists in the database
+		// It will be kinda - make response to - api.narukoshin.me/verify/{id}, then the backend will check the database and return the response
+		// response be like json - {"verify":true} - if the user exists in the database, if user is not in the database, then {"verify":false}
 		return true
 	}
 }
@@ -104,20 +130,9 @@ func cmdInit(){
 
 	// Creating one time registration.
 	// When user will run this command, this piece of code will check if settings.json exists and if not then that will be created
-	if _, err := os.Stat(folderName + "/settings.json"); os.IsNotExist(err) {
-		err := os.Mkdir(folderName, 0777)
-		if err != nil {
-			log.Fatal(err)
-		}
-		file, err := os.Create(folderName + "/settings.json")
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer file.Close()
-	} else {
+	if verifyRegistration(){
 		fmt.Println("You are already registered for the CTF.\nIf there is any mistake, please contact your CTF organizer.")
 		return
-
 	}
 
 	// Registering the CTf participient in the server
@@ -242,7 +257,7 @@ func cmdScore(){
 	}
 	// getting the data from the API server
 	client := &http.Client{Timeout: 30 * time.Second}
-	req, err := http.NewRequest("GET", "https://api.narukoshin.me/suka", nil)
+	req, err := http.NewRequest("GET", "https://api.narukoshin.me/score", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -250,7 +265,7 @@ func cmdScore(){
 	type member struct {
 		Name string `json:"name"`
 		Course string `json:"course"`
-		RegDate string `json:"registered_at"`
+		LastSubmit string `json:"last_submit_at"`
 		Points string `json:"points"`
 	}
 	var members []member
@@ -261,29 +276,35 @@ func cmdScore(){
 	}
 	json.NewDecoder(resp.Body).Decode(&members)
 
-	fmt.Println(" ______________________________________________________")
-	fmt.Println("|[ID] [FULL NAME] [COURSE] [POINTS] [REGISTRATION DATE]|")
-	fmt.Println(" ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣")
+	fmt.Println(" ________________________________________________________________")
+	fmt.Println("|[ID] [FULL NAME] [COURSE] [POINTS] [LAST SUBMIT DATE] [IS ADMIN]|")
+	fmt.Println(" ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣")
 	count := 0
 	for _, member := range members {
 		count++
-		date, err := time.Parse(time.RFC3339, member.RegDate)
+		date, err := time.Parse(time.RFC3339, member.LastSubmit)
 		if err != nil {
 			log.Fatal(err)
 		}
-		fmt.Printf("[%d] {%s} {%s} {%s} {%s}\n", count, member.Name, member.Course, member.Points, date)
+		fmt.Printf("[%d] {%s} {%s} {%s} {%s} {⊝ }\n", count, member.Name, member.Course, member.Points, date)
+	}
+	if count == 0 {
+		fmt.Println("No data to show...")
+		return
 	}
 }
 
 // Deleting the files that the tool created
 func cmdEnd(){
-	if _, err := os.Stat(folderName); !os.IsNotExist(err) {
-		// Deleting the config file
+	if verifyRegistration(){
+		// If the files are created, we will delete them
+		var err error
+		// deleting the file from the folder because we can't delete the entire directory
 		err = os.Remove(folderName + "/settings.json")
 		if err != nil {
 			log.Fatal(err)
 		}
-		// Deleting the directory
+		// Now, we can delete the directory because there's no files inside
 		err = os.Remove(folderName)
 		if err != nil {
 			log.Fatal(err)
