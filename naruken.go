@@ -35,6 +35,9 @@ const folderName string = ".narukeFolder"
 // The user with admin privileges will be kinda powerful because there will be function to reset the whole CTF
 // like, the function will send the singal to the server to delete the database and creates new CTF
 
+// New idea about testing mode toggler
+// You can (maybe in future) enable the testing mode or disable it.
+
 func verifyRegistration() bool {
 	// TODO: The user can create many profiles so, we need to create something for the integrity like...... capturing the hash of the file
 	// ...but there is the problem because in the settings.json is stored the user id
