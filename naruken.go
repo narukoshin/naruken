@@ -23,6 +23,32 @@ const folderName string = ".narukeFolder"
 // TODO: Create function that will create the folder and settings.json file and \
 // ...verify if the folder and file exists
 
+func verifyRegistration() bool {
+	var file *os.File
+	if _, err := os.Stat(folderName); os.IsNotExist(err) {
+		// Creatng the folder where our settings.json file will be stored
+		err = os.Mkdir(folderName, 0777)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// Creating the settings.json file
+		file, err = os.Create(folderName + "/settings.json")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		return false
+	} else {
+		// If the settings.json file is created, then let's verify the user id 
+		file, err = os.OpenFile(folderName + "/settings.json", os.O_WRONLY, 0777)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer file.Close()
+		return true
+	}
+}
+
 func main(){
 	if !(len(os.Args) > 1){
 		fmt.Println("Usage: ./naruken <command> [options...]")
